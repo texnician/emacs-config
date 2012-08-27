@@ -33,7 +33,7 @@
 ;(set-frame-font "Consolas-11")
 ;(set-frame-font "Monaco-10")
 ;(set-frame-font "Inconsolata-13:antialias=none")
-(set-fontset-font "fontset-default" 'han (font-spec :family "Microsoft YaHei"))
+;(set-fontset-font "fontset-default" 'han (font-spec :family "Microsoft YaHei"))
 (set-fontset-font "fontset-default" 'han (font-spec :family "WenQuanYi Zen Hei"))
 ;; (set-fontset-font "fontset-default" '(#x0B01 . #x0B70) (font-spec :family "Kalinga"))
 ;; (set-fontset-font "fontset-default" '(#x2200 . #x22FF) (font-spec :family "Arial Unicode MS"))
@@ -41,6 +41,16 @@
 ;; (set-fontset-font "fontset-default" '(#xFF00 . #xFFEF) (font-spec :family "MingLiU"))
 ;; (set-fontset-font "fontset-default" '(#x1000 . #x109F) (font-spec :family "Code2000"))
 ;; (set-fontset-font "fontset-default" '(#x1F000 . #x1F02B) (font-spec :family "Symbola"))
+
+(defun toggle-fullscreen ()
+  "Toggle full screen on X11"
+  (interactive)
+  (when (eq window-system 'x)
+    (set-frame-parameter
+     nil 'fullscreen
+     (when (not (frame-parameter nil 'fullscreen)) 'fullboth))))
+
+(global-set-key [f11] 'toggle-fullscreen)
 
 ;; Start emacs server
 (server-start)
@@ -279,6 +289,9 @@
 ;;; gtags
 (autoload 'gtags-mode "gtags" "" t)
 
+
+(load-file (expand-file-name "~/site-lisp/parse-cflags.el"))
+
 ;; Make a non-standard key binding.  We can put this in
 ;; c-mode-base-map because c-mode-map, c++-mode-map, and so on,
 ;; inherit from it.
@@ -386,8 +399,13 @@
   (define-key c-mode-base-map [(control ?.)] 'eassist-switch-h-cpp)
   (define-key c-mode-base-map [(control ?c) (?l)] 'my-svn-lock-current-buffer-file)
   (define-key c-mode-base-map [(control ?c) (?L)] 'my-svn-unlock-current-buffer-file)
-  ;(make-cpp-abbrev)
-  (setq c-macro-cppflags "-I ."))
+  (setq ac-sources (append '(ac-source-abbrev ac-source-clang-async ac-source-words-in-same-mode-buffers ac-source-imenu ac-source-filename ac-source-dictionary) ac-sources))
+  (make-local-variable 'whitespace-style)
+  (setq whitespace-style '(face tabs empty trailing indentation::space))
+  (whitespace-mode t)
+  (set-local-clang-flags)
+  (define-key c-mode-map [(meta ?/)] 'ac-complete-clang-async)
+  (define-key c++-mode-map [(meta ?/)] 'ac-complete-clang-async))
 
 (defun c-delete-tail-blank ()
   "Delete extra blankets at the end of file"
@@ -414,15 +432,12 @@
        font-lock-keyword-face))))
 
 (add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
-(add-hook 'c++-mode-hook `ac-settings-4-cpp)
+;(add-hook 'c++-mode-hook `ac-settings-4-cpp)
 (setq cpp-system-src-regex "\\(Microsoft Visual Studio.+\\|/boost/.+\\|/ace/.+\\)")
 ;(setq-mode-local c++-mode whitespace-style '(lines-tail))
 (add-hook 'c++-mode-hook
       '(lambda ()
          (program-mode-common-hook)
-         (make-local-variable 'whitespace-style)
-         (setq whitespace-style '(face tabs empty trailing indentation::space))
-         (whitespace-mode t)
          (add-c++0x-keywords)
          (if (string-match cpp-system-src-regex
                            buffer-file-name)
@@ -476,7 +491,6 @@
  '(hl-paren-colors (quote ("springgreen1" "springgreen2" "springgreen3" "springgreen4")))
  '(linum-format (quote dynamic))
  '(password-cache-expiry 3600)
- '(semantic-c-dependency-system-include-path (quote ("D:\\new_project\\Server_Engine" "D:\\new_project\\Jwoll_Server0824\\Game" "D:\\vs9lib\\include" "D:\\vs9lib\\include\\lua-5.1" "D:\\project\\lib\\boost_1_38_0" "D:\\new_project\\MMORPG_Engine" "D:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\include\\")))
  '(semanticdb-global-mode t nil (semanticdb))
  '(slime-net-coding-system (quote utf-8-unix))
  '(tramp-terminal-type "xterm")
@@ -513,6 +527,9 @@
 ;; (push '("^.*luac[0-9.]*\\(.exe\\)?: *\\(.*\\):\\([0-9]+\\): \\(.*\\)$" 2 3 nil 4)
 ;;       flymake-err-line-patterns)
 
+
+(add-hook 'diff-mode-hook '(lambda ()
+                             (whitespace-mode t)))
 
 (add-hook 'lua-mode-hook
           '(lambda ()
@@ -1077,6 +1094,36 @@ If there is no .svn directory, examine if there is CVS and run
 (add-hook 'mew-message-hook 'mew-w3m-minor-mode-setter)
 
 (require 'thrift-mode)
+
+(require 'auto-complete-clang-async)
+
+(defun ac-cc-mode-setup ()
+  (setq clang-complete-executable "~/.emacs.d/clang-complete")
+  (if (stringp (buffer-file-name))
+      (launch-completion-proc)))
+
+(defun my-ac-config ()
+  (add-hook 'c-mode-common-hook 'ac-cc-mode-setup)
+  (add-hook 'auto-complete-mode-hook 'ac-common-setup)
+  (global-auto-complete-mode t))
+
+(my-ac-config)
+
+;(require 'auto-complete-clang)
+
+(setq ac-clang-flags
+      (mapcar (lambda (item)(concat "-I" item))
+              (split-string
+               "/usr/include/c++/4.5
+ /usr/include/c++/4.5/x86_64-linux-gnu
+ /usr/include/c++/4.5/backward
+ /usr/local/include
+ /usr/lib/x86_64-linux-gnu/gcc/x86_64-linux-gnu/4.5.2/include
+ /usr/lib/x86_64-linux-gnu/gcc/x86_64-linux-gnu/4.5.2/include-fixed
+ /usr/include/x86_64-linux-gnu
+ /usr/include"
+               )))
+
 ;; Local Variables:
 ;; coding: utf-8
 ;; End:
