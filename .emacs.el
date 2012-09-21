@@ -18,6 +18,8 @@
 (require 'package)
 (add-to-list 'package-archives
       '("marmalade" . "http://marmalade-repo.org/packages/"))
+(add-to-list 'package-archives
+             '("melpa" . "http://melpa.milkbox.net/packages/") t)
 (package-initialize)
 
 (dolist (m (directory-files "~/.emacs.d/elpa" t "[a-zA-Z0-9].+[0-9]$"))
@@ -379,6 +381,10 @@
 
 (add-to-list 'auto-mode-alist
              '(".+/include/.+" . c++-mode))
+
+(require 'align)
+(setq align-indent-before-aligning t)
+(global-set-key (kbd "C-|") 'align)
 
 ;; Customizations for all modes in CC Mode.
 (defun my-c-mode-common-hook ()
@@ -1028,6 +1034,12 @@ If there is no .svn directory, examine if there is CVS and run
 (setq hl-paren-colors
       '("red1" "orange1" "yellow1" "green1" "cyan1"
         "slateblue1" "magenta1" "purple"))
+
+(require 'ac-nrepl)
+(add-hook 'nrepl-mode-hook 'ac-nrepl-setup)
+(add-hook 'clojure-nrepl-mode-hook 'ac-nrepl-setup)
+(eval-after-load "auto-complete"
+  '(add-to-list 'ac-modes 'nrepl-mode))
 
 (require 'haskell-mode)
 ;(load "~/haskell-mode-2.8.0/haskell-site-file")
