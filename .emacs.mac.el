@@ -2,9 +2,9 @@
 (column-number-mode t)
 (show-paren-mode t)
 (transient-mark-mode t)
-(tool-bar-mode nil)
-(scroll-bar-mode nil)
-(menu-bar-mode nil)
+(tool-bar-mode 0)
+(scroll-bar-mode 0)
+(menu-bar-mode 0)
 (global-auto-revert-mode t)
 (auto-revert-mode t)
 (setq default-fill-column 80)
@@ -14,11 +14,13 @@
 (mouse-avoidance-mode 'cat-and-mouse)
 (setq default-tab-width 4)
 (setq-default indent-tabs-mode nil)
+(setq ns-alternate-modifier 'super)
+(setq ns-command-modifier 'meta)
 
 (server-start)
 
 (set-language-environment "UTF-8")
-(set-frame-font "Monospace-10.5")
+(set-frame-font "Menlo-13")
 ;(set-frame-font "Consolas-10")
 ;(set-fontset-font "fontset-default" 'han (font-spec :family "WenQuanYi Micro Hei Mono"))
 ;(set-frame-font "Consolas-12")
@@ -72,16 +74,46 @@
 	try-complete-lisp-symbol-partially
 	try-complete-lisp-symbol))
 
+;; abbrev
+(defun my-indent-or-complete ()
+  "This smart tab is minibuffer compliant: it acts as usual in
+    the minibuffer. Else, if mark is active, indents region. Else
+    if point is at the end of a symbol, expands it. Else indents
+    the current line."
+  (interactive)
+  (if (minibufferp)
+      (unless (minibuffer-complete)
+	(hippie-expand nil))
+    (if mark-active
+	(indent-region (region-beginning)
+		       (region-end))
+      (if (looking-at "\\>")
+	  (hippie-expand nil)
+	(indent-for-tab-command)))))
+
+(global-set-key (kbd "C-\\") 'set-mark-command)
+(global-set-key [(meta ?/)] 'hippie-expand)
+(setq hippie-expand-try-functions-list
+      '(try-expand-dabbrev
+	try-expand-dabbrev-visible
+	try-expand-dabbrev-all-buffers
+	try-expand-dabbrev-from-kill
+	try-complete-lisp-symbol-partially
+	try-complete-file-name
+	try-expand-all-abbrevs
+	try-expand-list
+	try-expand-line
+	try-complete-lisp-symbol-partially
+	try-complete-lisp-symbol))
+
 ;; CEDET
 
-(load-file "~/cedet-1.0/common/cedet.el")
+(load-file "~/cedet-1.1/common/cedet.el")
 (semantic-load-enable-excessive-code-helpers)
 (setq-mode-local c-mode
                  semanticdb-find-default-throttle
                  '(project unloaded system recursive omniscience))
 (setq semanticdb-default-save-directory "~/semanticdb")
-(setq semanticdb-project-roots
-      (list (expand-file-name "/")))
 
 (defun test-inhibt ()
   (string-match-p "xxxx" (buffer-file-name)))
@@ -99,17 +131,15 @@
 	     (my-semantic-init)
 	     (define-key senator-mode-map [(tab)] 'ac-expand)))
 
-;;; This was installed by package-install.el.
-;;; This provides support for the package system and
-;;; interfacing with ELPA, the package archive.
 ;;; Move this code earlier if you want to reference
 ;;; packages in your .emacs.
-(when
-    (load
-     (expand-file-name "~/.emacs.d/elpa/package.el"))
-  (add-to-list 'package-archives
-               '("marmalade" . "http://marmalade-repo.org/packages/"))
-  (package-initialize))
+(require 'package)
+(add-to-list 'package-archives
+;;	     '("marmalade" . "http://marmalade-repo.org/packages/")
+         '("melpa" . "http://melpa.org/packages/") t)
+(add-to-list 'package-archives
+             '("marmalade" . "http://marmalade-repo.org/packages/"))
+(package-initialize)
 
 ;; (dolist (dir (directory-files package-user-dir t "[a-zA-Z].*[0-9]$"))
 ;;   (add-to-list 'load-path dir))
@@ -164,17 +194,10 @@
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 (autoload 'ibuffer "ibuffer" "List buffers." t)
 
-(add-to-list 'load-path "~/color-theme-6.6.0")
 (require 'color-theme)
-(load-file "~/my-color-theme.el")
-(load-file "~/color-theme-2.el")
-(load-file "~/zenburn/color-theme-zenburn.el")
-(add-to-list 'load-path "~/solarized")
 (require 'color-theme-solarized)
-(color-theme-initialize)
 (setq *favorite-themes* (mapcar #'car
                             '((my-color-theme)
-                              (color-theme-plastic)
                               (color-theme-classic)
                               (color-theme-oswald)
                               (color-theme-taming-mr-arneson)
@@ -308,7 +331,9 @@
  '(semantic-inhibit-functions (quote (test-inhibt)))
  '(semanticdb-global-mode t nil (semanticdb))
  '(slime-net-coding-system (quote utf-8-unix))
- '(which-function-mode t))
+ '(which-function-mode t)
+ '(ns-alternate-modifier (quote super))
+ '(ns-command-modifier (quote meta)))
 (custom-set-faces
   ;; custom-set-faces was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
@@ -323,10 +348,10 @@
 (setq tramp-default-method "plink")
 (setq recentf-auto-cleanup 'never)
 
-(setq auto-complete-dir "~/auto-complete-1.3.1")
-(add-to-list 'load-path auto-complete-dir)
+;;(setq auto-complete-dir "~/auto-complete-1.3.1")
+;;(add-to-list 'load-path auto-complete-dir)
 (require 'auto-complete-config)
-(add-to-list 'ac-dictionary-directories (concatenate 'string auto-complete-dir "/ac-dict"))
+;;(add-to-list 'ac-dictionary-directories (concatenate 'string auto-complete-dir "/ac-dict"))
 (ac-config-default)
 
 
@@ -431,18 +456,19 @@
 
 (global-set-key [f11] 'fullscreen)
 
-(setq slime-dir "~/slime-2011-02-16")
+(setq slime-dir "~/slime-2.12")
 (add-to-list 'load-path slime-dir)  ; your SLIME directory
-(setq slime-lisp-implementations
-      '((sbcl ("sbcl") :coding-system utf-8-unix)
-        (ccl ("ccl -K utf-8") :coding-system utf-8-unix)
-        (clisp ("clisp -K full") :coding-system utf-8-unix)
-        (ecl ("ecl"))))
+;; (setq slime-lisp-implementations
+;;       '((sbcl ("sbcl") :coding-system utf-8-unix)
+;;         (ccl ("ccl -K utf-8") :coding-system utf-8-unix)
+;;         (clisp ("clisp -K full") :coding-system utf-8-unix)
+;;         (ecl ("ecl"))))
 ;(setq inferior-lisp-program "clisp -K full") ; your Lisp system
-(setq inferior-lisp-program "sbcl") ; your Lisp system
-(require 'slime)
+(setq inferior-lisp-program "/usr/local/bin/sbcl") ; your Lisp system
+;(require 'slime)
+(setq slime-contribs '(slime-fancy))
 ;(setq slime-net-coding-system 'utf-8-unix)
-(slime-setup '(slime-fancy))
+
 
 
 (add-hook 'lisp-mode-hook (lambda ()
@@ -474,41 +500,45 @@
     (read-kbd-macro paredit-backward-delete-key) nil))
 (add-hook 'slime-repl-mode-hook 'override-slime-repl-bindings-with-paredit)
 
-(require 'geiser-install)
+(require 'geiser)
 (require 'quack)
 
-(require 'nterm)
+;(require 'nterm)
 
 (autoload 'ack-same "full-ack" nil t)
 (autoload 'ack "full-ack" nil t)
 (autoload 'ack-find-same-file "full-ack" nil t)
 (autoload 'ack-find-file "full-ack" nil t)
 
-(require 'find-file-in-project)
+;(require 'find-file-in-project)
+(require 'find-file-in-repository)
 
-(require 'less)
+;(require 'less)
 
 ;; (define-key dired-mode-map (kbd "C-s") 'dired-isearch-forward)
 ;; (define-key dired-mode-map (kbd "C-r") 'dired-isearch-backward)
 ;; (define-key dired-mode-map (kbd "ESC C-s") 'dired-isearch-forward-regexp)
 ;; (define-key dired-mode-map (kbd "ESC C-r") 'dired-isearch-backward-regexp)
 
-(add-to-list 'load-path (expand-file-name "~/jdee-2.4.1/lisp"))
-(add-to-list 'load-path (expand-file-name "~/elib-1.0"))
-(require 'jde)
-(fmakunbound 'mswindows-cygwin-to-win32-path)
-(add-hook 'jde-mode-hook
-          (lambda ()
-            (make-local-variable 'before-save-hook)
-            (add-to-list 'before-save-hook 'c-delete-tail-blank)
-            (line-move t)
-            (auto-revert-mode t)))
+;; (add-to-list 'load-path (expand-file-name "~/jdee-2.4.1/lisp"))
+;; (add-to-list 'load-path (expand-file-name "~/elib-1.0"))
+;; (require 'jde)
+;; (fmakunbound 'mswindows-cygwin-to-win32-path)
+;; (add-hook 'jde-mode-hook
+;;           (lambda ()
+;;             (make-local-variable 'before-save-hook)
+;;             (add-to-list 'before-save-hook 'c-delete-tail-blank)
+;;             (line-move t)
+;;             (auto-revert-mode t)))
 
 (require 'clojure-mode)
-(setq slime-use-autodoc-mode nil) ;; Workaround for Clojure 1.3. See http://groups.google.com/group/clojure/browse_thread/thread/692c3a93bbdf740c?tvc=2&pli=1
+;(setq slime-use-autodoc-mode nil) ;; Workaround for Clojure 1.3. See http://groups.google.com/group/clojure/browse_thread/thread/692c3a93bbdf740c?tvc=2&pli=1
 
 (require 'paredit)
+(require 'paredit-everywhere)
 (require 'highlight-parentheses)
+(require 'highlight-quoted)
+(require 'highlight-stages)
 (add-hook 'emacs-lisp-mode-hook 'enable-paredit-mode)
 (add-hook 'clojure-mode-hook
           (lambda ()
@@ -522,23 +552,23 @@
       '("red1" "orange1" "yellow1" "green1" "cyan1"
         "slateblue1" "magenta1" "purple"))
 
-(add-to-list 'load-path "~/python-mode.el-6.0.3")
-(require 'python-mode)
+;(add-to-list 'load-path "~/python-mode.el-6.0.3")
+;(require 'python-mode)
 
-(add-to-list 'load-path "~/haskell-mode-2.8.0")
-(load "~/haskell-mode-2.8.0/haskell-site-file")
+;(add-to-list 'load-path "~/haskell-mode-2.8.0")
+;(load "~/haskell-mode-2.8.0/haskell-site-file")
 (add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode)
 (add-hook 'haskell-mode-hook 'turn-on-haskell-indentation)
 ;;(add-hook 'haskell-mode-hook 'turn-on-haskell-indent)
 ;;(add-hook 'haskell-mode-hook 'turn-on-haskell-simple-indent)
 
-(add-to-list 'load-path "~/.emacs.d")
-(require 'auto-complete-clang-async)
+;(add-to-list 'load-path "~/.emacs.d")
+;(require 'auto-complete-clang-async)
 
-(defun ac-cc-mode-setup ()
-  (setq clang-complete-executable "~/.emacs.d/clang-complete")
-  (if (stringp (buffer-file-name))
-      (launch-completion-proc)))
+;; (defun ac-cc-mode-setup ()
+;;   (setq clang-complete-executable "~/.emacs.d/clang-complete")
+;;   (if (stringp (buffer-file-name))
+;;       (launch-completion-proc)))
 
 (defun my-ac-config ()
   (add-hook 'c-mode-common-hook 'ac-cc-mode-setup)
@@ -549,19 +579,19 @@
 
 ;(require 'auto-complete-clang)
 
-(setq ac-clang-flags
-      (mapcar (lambda (item)(concat "-I" item))
-              (split-string
-               "
-/usr/lib64/qt/include
- /usr/lib64/gcc/x86_64-slackware-linux/4.4.4/../../../../include/c++/4.4.4
- /usr/lib64/gcc/x86_64-slackware-linux/4.4.4/../../../../include/c++/4.4.4/x86_64-slackware-linux
- /usr/lib64/gcc/x86_64-slackware-linux/4.4.4/../../../../include/c++/4.4.4/backward
- /usr/local/include
- /usr/lib64/gcc/x86_64-slackware-linux/4.4.4/include
- /usr/lib64/gcc/x86_64-slackware-linux/4.4.4/include-fixed
- /usr/include"
-               )))
+;; (setq ac-clang-flags
+;;       (mapcar (lambda (item)(concat "-I" item))
+;;               (split-string
+;;                "
+;; /usr/lib64/qt/include
+;;  /usr/lib64/gcc/x86_64-slackware-linux/4.4.4/../../../../include/c++/4.4.4
+;;  /usr/lib64/gcc/x86_64-slackware-linux/4.4.4/../../../../include/c++/4.4.4/x86_64-slackware-linux
+;;  /usr/lib64/gcc/x86_64-slackware-linux/4.4.4/../../../../include/c++/4.4.4/backward
+;;  /usr/local/include
+;;  /usr/lib64/gcc/x86_64-slackware-linux/4.4.4/include
+;;  /usr/lib64/gcc/x86_64-slackware-linux/4.4.4/include-fixed
+;;  /usr/include"
+;;                )))
 ;; (require 'ack)
 ;; (require 'nav)
 
