@@ -1,10 +1,12 @@
+(setq ns-alternate-modifier 'super)
+(setq ns-command-modifier 'meta)
 (global-font-lock-mode t)
 (column-number-mode t)
 (show-paren-mode t)
 (transient-mark-mode t)
 (tool-bar-mode 0)
 (scroll-bar-mode 0)
-(menu-bar-mode 0)
+                                        ;(menu-bar-mode 0)
 (global-auto-revert-mode t)
 (auto-revert-mode t)
 (setq default-fill-column 80)
@@ -14,17 +16,15 @@
 (mouse-avoidance-mode 'cat-and-mouse)
 (setq default-tab-width 4)
 (setq-default indent-tabs-mode nil)
-(setq ns-alternate-modifier 'super)
-(setq ns-command-modifier 'meta)
 
 (server-start)
 
 (set-language-environment "UTF-8")
 (set-frame-font "Menlo-13")
-;(set-frame-font "Consolas-10")
-;(set-fontset-font "fontset-default" 'han (font-spec :family "WenQuanYi Micro Hei Mono"))
-;(set-frame-font "Consolas-12")
-;(set-fontset-font "fontset-default" 'han (font-spec :family "Microsoft YaHei"))
+                                        ;(set-frame-font "Consolas-10")
+                                        ;(set-fontset-font "fontset-default" 'han (font-spec :family "WenQuanYi Micro Hei Mono"))
+                                        ;(set-frame-font "Consolas-12")
+                                        ;(set-fontset-font "fontset-default" 'han (font-spec :family "Microsoft YaHei"))
 ;; (set-fontset-font "fontset-default" '(#x0B01 . #x0B70) (font-spec :family "Kalinga"))
 ;; (set-fontset-font "fontset-default" '(#x2200 . #x22FF) (font-spec :family "Arial Unicode MS"))
 ;; (set-fontset-font "fontset-default" '(#x2150 . #x218F) (font-spec :family "Arial Unicode MS"))
@@ -51,28 +51,29 @@
   (interactive)
   (if (minibufferp)
       (unless (minibuffer-complete)
-	(hippie-expand nil))
+        (hippie-expand nil))
     (if mark-active
-	(indent-region (region-beginning)
-		       (region-end))
+        (indent-region (region-beginning)
+                       (region-end))
       (if (looking-at "\\>")
-	  (hippie-expand nil)
-	(indent-for-tab-command)))))
+          (hippie-expand nil)
+        (indent-for-tab-command)))))
 
 (global-set-key (kbd "C-\\") 'set-mark-command)
+(global-set-key [(control backspace)] 'set-mark-command)
 (global-set-key [(meta ?/)] 'hippie-expand)
 (setq hippie-expand-try-functions-list
       '(try-expand-dabbrev
-	try-expand-dabbrev-visible
-	try-expand-dabbrev-all-buffers
-	try-expand-dabbrev-from-kill
-	try-complete-lisp-symbol-partially
-	try-complete-file-name
-	try-expand-all-abbrevs
-	try-expand-list
-	try-expand-line
-	try-complete-lisp-symbol-partially
-	try-complete-lisp-symbol))
+        try-expand-dabbrev-visible
+        try-expand-dabbrev-all-buffers
+        try-expand-dabbrev-from-kill
+        try-complete-lisp-symbol-partially
+        try-complete-file-name
+        try-expand-all-abbrevs
+        try-expand-list
+        try-expand-line
+        try-complete-lisp-symbol-partially
+        try-complete-lisp-symbol))
 
 ;; abbrev
 (defun my-indent-or-complete ()
@@ -83,28 +84,28 @@
   (interactive)
   (if (minibufferp)
       (unless (minibuffer-complete)
-	(hippie-expand nil))
+        (hippie-expand nil))
     (if mark-active
-	(indent-region (region-beginning)
-		       (region-end))
+        (indent-region (region-beginning)
+                       (region-end))
       (if (looking-at "\\>")
-	  (hippie-expand nil)
-	(indent-for-tab-command)))))
+          (hippie-expand nil)
+        (indent-for-tab-command)))))
 
 (global-set-key (kbd "C-\\") 'set-mark-command)
 (global-set-key [(meta ?/)] 'hippie-expand)
 (setq hippie-expand-try-functions-list
       '(try-expand-dabbrev
-	try-expand-dabbrev-visible
-	try-expand-dabbrev-all-buffers
-	try-expand-dabbrev-from-kill
-	try-complete-lisp-symbol-partially
-	try-complete-file-name
-	try-expand-all-abbrevs
-	try-expand-list
-	try-expand-line
-	try-complete-lisp-symbol-partially
-	try-complete-lisp-symbol))
+        try-expand-dabbrev-visible
+        try-expand-dabbrev-all-buffers
+        try-expand-dabbrev-from-kill
+        try-complete-lisp-symbol-partially
+        try-complete-file-name
+        try-expand-all-abbrevs
+        try-expand-list
+        try-expand-line
+        try-complete-lisp-symbol-partially
+        try-complete-lisp-symbol))
 
 ;; CEDET
 
@@ -127,16 +128,16 @@
 
 ;; (remove-hook 'senator-minor-mode-hook 'senator-hippie-expand-hook)
 (add-hook 'senator-minor-mode-hook
-	  '(lambda ()
-	     (my-semantic-init)
-	     (define-key senator-mode-map [(tab)] 'ac-expand)))
+          '(lambda ()
+             (my-semantic-init)
+             (define-key senator-mode-map [(tab)] 'ac-expand)))
 
 ;;; Move this code earlier if you want to reference
 ;;; packages in your .emacs.
 (require 'package)
 (add-to-list 'package-archives
-;;	     '("marmalade" . "http://marmalade-repo.org/packages/")
-         '("melpa" . "http://melpa.org/packages/") t)
+             ;;	     '("marmalade" . "http://marmalade-repo.org/packages/")
+             '("melpa" . "http://melpa.org/packages/") t)
 (add-to-list 'package-archives
              '("marmalade" . "http://marmalade-repo.org/packages/"))
 (package-initialize)
@@ -197,26 +198,26 @@
 (require 'color-theme)
 (require 'color-theme-solarized)
 (setq *favorite-themes* (mapcar #'car
-                            '((my-color-theme)
-                              (color-theme-classic)
-                              (color-theme-oswald)
-                              (color-theme-taming-mr-arneson)
-                              (color-theme-taylor)
-                              (color-theme-arjen)
-                              (color-theme-billw)
-                              (color-theme-charcoal-black)
-                              (color-theme-goldenrod)
-                              (color-theme-clarity)
-                              (color-theme-comidia)
-                              (color-theme-jsc-dark)
-                              (color-theme-dark-laptop)
-                              (color-theme-euphoria)
-                              (color-theme-hober)
-                              (color-theme-lethe)
-                              (color-theme-ld-dark)
-                              (color-theme-gnome2)
-                              (color-theme-midnight)
-                              (color-theme-dark-blue2))))
+                                '((my-color-theme)
+                                  (color-theme-classic)
+                                  (color-theme-oswald)
+                                  (color-theme-taming-mr-arneson)
+                                  (color-theme-taylor)
+                                  (color-theme-arjen)
+                                  (color-theme-billw)
+                                  (color-theme-charcoal-black)
+                                  (color-theme-goldenrod)
+                                  (color-theme-clarity)
+                                  (color-theme-comidia)
+                                  (color-theme-jsc-dark)
+                                  (color-theme-dark-laptop)
+                                  (color-theme-euphoria)
+                                  (color-theme-hober)
+                                  (color-theme-lethe)
+                                  (color-theme-ld-dark)
+                                  (color-theme-gnome2)
+                                  (color-theme-midnight)
+                                  (color-theme-dark-blue2))))
 
 (random t)
 
@@ -228,12 +229,12 @@
                            (next-theme (1+ po) (cdr lst)))))
       (next-theme 0 *favorite-themes*))))
 
-;(select-random-theme)
-;(color-theme-taylor)
-;(color-theme-classic)
-; (color-theme-zenburn)
+                                        ;(select-random-theme)
+                                        ;(color-theme-taylor)
+                                        ;(color-theme-classic)
+                                        ; (color-theme-zenburn)
 (color-theme-solarized-dark)
-;(color-theme-solarized-light)
+                                        ;(color-theme-solarized-light)
 
 (defun c-delete-tail-blank ()
   "Delete extra blankets at the end of file"
@@ -251,48 +252,48 @@
              '(".*\\.h" . c++-mode))
 ;; C mode
 (add-hook 'c-mode-hook
-	  '(lambda ()
-	     (c-set-style "gnu")
-	     (c-toggle-auto-state)
-	     (c-toggle-hungry-state)
-	     (setq semanticdb-project-system-databases
-		   (list (semanticdb-create-database
-			  semanticdb-new-database-class
-			  "/usr/include/")))
-	     (define-key c-mode-base-map [backtab] 'indent-relative)
-         (setq c-cleanup-list 
-               '(empty-defun-braces
-                 scope-operator one-liner-defun
-                 defun-close-semi list-close-comma
-                 scope-operator comment-close-slash))
-         (make-local-variable 'before-save-hook)
-         (add-to-list 'before-save-hook 'c-delete-tail-blank)
-         (setq ac-sources (append '(ac-source-abbrev ac-source-words-in-same-mode-buffers ac-source-clang-async ac-source-imenu ac-source-filename ac-source-dictionary )
-                                  ac-sources)
-         )
-         (define-key c-mode-map [(meta ?/)] 'ac-complete-clang-async)))
+          '(lambda ()
+             (c-set-style "gnu")
+             (c-toggle-auto-state)
+             (c-toggle-hungry-state)
+             (setq semanticdb-project-system-databases
+                   (list (semanticdb-create-database
+                          semanticdb-new-database-class
+                          "/usr/include/")))
+             (define-key c-mode-base-map [backtab] 'indent-relative)
+             (setq c-cleanup-list 
+                   '(empty-defun-braces
+                     scope-operator one-liner-defun
+                     defun-close-semi list-close-comma
+                     scope-operator comment-close-slash))
+             (make-local-variable 'before-save-hook)
+             (add-to-list 'before-save-hook 'c-delete-tail-blank)
+             (setq ac-sources (append '(ac-source-abbrev ac-source-words-in-same-mode-buffers ac-source-clang-async ac-source-imenu ac-source-filename ac-source-dictionary )
+                                      ac-sources)
+                   )
+             (define-key c-mode-map [(meta ?/)] 'ac-complete-clang-async)))
 
 (add-hook 'c++-mode-hook
-	  '(lambda ()
-	     (c-set-style "stroustrup")
-	     (c-toggle-auto-state)
-	     (c-toggle-hungry-state)
-	     (setq semanticdb-project-system-databases
-		   (list (semanticdb-create-database
-			  semanticdb-new-database-class
-			  "/usr/include/")))
-	     (define-key c-mode-base-map [backtab] 'indent-relative)
-         (setq c-cleanup-list 
-               '(empty-defun-braces
-                 scope-operator one-liner-defun
-                 defun-close-semi list-close-comma
-                 scope-operator comment-close-slash))
-         (make-local-variable 'before-save-hook)
-         (add-to-list 'before-save-hook 'c-delete-tail-blank)
-         (setq ac-sources (append '(ac-source-abbrev ac-source-words-in-same-mode-buffers ac-source-clang-async ac-source-imenu ac-source-filename ac-source-dictionary )
-                                  ac-sources))
-         (define-key c++-mode-map [(meta ?/)] 'ac-complete-clang-async)
-         (set-local-clang-flags)))
+          '(lambda ()
+             (c-set-style "stroustrup")
+             (c-toggle-auto-state)
+             (c-toggle-hungry-state)
+             (setq semanticdb-project-system-databases
+                   (list (semanticdb-create-database
+                          semanticdb-new-database-class
+                          "/usr/include/")))
+             (define-key c-mode-base-map [backtab] 'indent-relative)
+             (setq c-cleanup-list 
+                   '(empty-defun-braces
+                     scope-operator one-liner-defun
+                     defun-close-semi list-close-comma
+                     scope-operator comment-close-slash))
+             (make-local-variable 'before-save-hook)
+             (add-to-list 'before-save-hook 'c-delete-tail-blank)
+             (setq ac-sources (append '(ac-source-abbrev ac-source-words-in-same-mode-buffers ac-source-clang-async ac-source-imenu ac-source-filename ac-source-dictionary )
+                                      ac-sources))
+             (define-key c++-mode-map [(meta ?/)] 'ac-complete-clang-async)
+             (set-local-clang-flags)))
 
 (load "desktop")
 (desktop-load-default)
@@ -302,10 +303,10 @@
 ;; (add-hook 'after-init-hook 'session-initialize)
 
 (custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(ac-modes (quote (emacs-lisp-mode lisp-interaction-mode c-mode cc-mode c++-mode clojure-mode java-mode perl-mode cperl-mode python-mode ruby-mode ecmascript-mode javascript-mode js2-mode php-mode css-mode makefile-mode sh-mode fortran-mode f90-mode ada-mode xml-mode sgml-mode slime-mode slime-repl-mode lisp-mode jde-mode)))
  '(c-cleanup-list (quote (empty-defun-braces one-liner-defun defun-close-semi list-close-comma scope-operator comment-close-slash)))
  '(c-macro-cppflags "-std=c++0x -I/usr/local/include/guile/2.0 -I/usr/include/c++/4.4.4 -I/usr/include/c++/4.4.4/x86_64-slackware-linux -I/usr/local/stow/stackless-271-export/include/python2.7/")
@@ -335,10 +336,10 @@
  '(ns-alternate-modifier (quote super))
  '(ns-command-modifier (quote meta)))
 (custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(bold ((t (:background "black" :foreground "snow3" :weight bold))))
  '(info-menu-header ((t (:inherit variable-pitch :weight bold :family "Serif"))))
  '(info-xref-visited ((t (:foreground "slateblue" :underline t))))
@@ -446,8 +447,8 @@
     (exit-minibuffer)))
 
 (add-hook 'Info-mode-hook
-	  '(lambda ()
-         (variable-pitch-mode)))
+          '(lambda ()
+             (variable-pitch-mode)))
 
 (defun fullscreen (&optional f)
   (interactive)
@@ -463,18 +464,18 @@
 ;;         (ccl ("ccl -K utf-8") :coding-system utf-8-unix)
 ;;         (clisp ("clisp -K full") :coding-system utf-8-unix)
 ;;         (ecl ("ecl"))))
-;(setq inferior-lisp-program "clisp -K full") ; your Lisp system
+                                        ;(setq inferior-lisp-program "clisp -K full") ; your Lisp system
 (setq inferior-lisp-program "/usr/local/bin/sbcl") ; your Lisp system
-;(require 'slime)
+                                        ;(require 'slime)
 (setq slime-contribs '(slime-fancy))
-;(setq slime-net-coding-system 'utf-8-unix)
+                                        ;(setq slime-net-coding-system 'utf-8-unix)
 
 
 
-(add-hook 'lisp-mode-hook (lambda ()
-                            (linum-mode)
-                            (make-local-variable 'before-save-hook)
-                            (add-to-list 'before-save-hook 'c-delete-tail-blank)))
+(add-hook 'lisp-mode-hook '(lambda ()
+                             (linum-mode)
+                             (make-local-variable 'before-save-hook)
+                             (add-to-list 'before-save-hook 'c-delete-tail-blank)))
 
 (require 'ac-slime)
 (add-hook 'slime-mode-hook 'set-up-slime-ac t)
@@ -503,17 +504,17 @@
 (require 'geiser)
 (require 'quack)
 
-;(require 'nterm)
+                                        ;(require 'nterm)
 
 (autoload 'ack-same "full-ack" nil t)
 (autoload 'ack "full-ack" nil t)
 (autoload 'ack-find-same-file "full-ack" nil t)
 (autoload 'ack-find-file "full-ack" nil t)
 
-;(require 'find-file-in-project)
+                                        ;(require 'find-file-in-project)
 (require 'find-file-in-repository)
 
-;(require 'less)
+                                        ;(require 'less)
 
 ;; (define-key dired-mode-map (kbd "C-s") 'dired-isearch-forward)
 ;; (define-key dired-mode-map (kbd "C-r") 'dired-isearch-backward)
@@ -532,7 +533,7 @@
 ;;             (auto-revert-mode t)))
 
 (require 'clojure-mode)
-;(setq slime-use-autodoc-mode nil) ;; Workaround for Clojure 1.3. See http://groups.google.com/group/clojure/browse_thread/thread/692c3a93bbdf740c?tvc=2&pli=1
+                                        ;(setq slime-use-autodoc-mode nil) ;; Workaround for Clojure 1.3. See http://groups.google.com/group/clojure/browse_thread/thread/692c3a93bbdf740c?tvc=2&pli=1
 
 (require 'paredit)
 (require 'paredit-everywhere)
@@ -552,23 +553,34 @@
       '("red1" "orange1" "yellow1" "green1" "cyan1"
         "slateblue1" "magenta1" "purple"))
 
-;(add-to-list 'load-path "~/python-mode.el-6.0.3")
-;(require 'python-mode)
+                                        ;(add-to-list 'load-path "~/python-mode.el-6.0.3")
+                                        ;(require 'python-mode)
 
-;(add-to-list 'load-path "~/haskell-mode-2.8.0")
-;(load "~/haskell-mode-2.8.0/haskell-site-file")
+                                        ;(add-to-list 'load-path "~/haskell-mode-2.8.0")
+                                        ;(load "~/haskell-mode-2.8.0/haskell-site-file")
 (add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode)
 (add-hook 'haskell-mode-hook 'turn-on-haskell-indentation)
 ;;(add-hook 'haskell-mode-hook 'turn-on-haskell-indent)
 ;;(add-hook 'haskell-mode-hook 'turn-on-haskell-simple-indent)
 
-;(add-to-list 'load-path "~/.emacs.d")
-;(require 'auto-complete-clang-async)
+                                        ;(add-to-list 'load-path "~/.emacs.d")
+                                        ;(require 'auto-complete-clang-async)
 
 ;; (defun ac-cc-mode-setup ()
 ;;   (setq clang-complete-executable "~/.emacs.d/clang-complete")
 ;;   (if (stringp (buffer-file-name))
 ;;       (launch-completion-proc)))
+
+(setq Tex-engine 'xetex)
+(add-hook 'TeX-mode-hook
+          '(lambda ()
+             (make-local-variable 'before-save-hook)
+             (add-to-list 'before-save-hook 'c-delete-tail-blank)
+             (linum-mode t)
+             (highlight-parentheses-mode t)
+             (paredit-mode t)))
+(require 'auto-complete-auctex)
+
 
 (defun my-ac-config ()
   (add-hook 'c-mode-common-hook 'ac-cc-mode-setup)
@@ -576,6 +588,11 @@
   (global-auto-complete-mode t))
 
 (my-ac-config)
+
+(add-hook 'makefile-mode-hook
+          '(lambda ()
+             (make-local-variable 'before-save-hook)
+             (add-to-list 'before-save-hook 'c-delete-tail-blank)))
 
 ;(require 'auto-complete-clang)
 
