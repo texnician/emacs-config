@@ -250,6 +250,7 @@
 ;(require 'color-theme-solarized)
 ;(load-theme 'zenburn t)
 (load-theme 'solarized-dark t)
+;(load-theme 'solarized-light t)
 ;; (nga-color-theme)
 ;;(color-theme-xp)
 ;; (my-color-theme)
@@ -438,6 +439,8 @@
        font-lock-keyword-face))))
 
 (add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
+(add-hook 'c-mode-common-hook 'program-mode-common-hook)
+
 ;(add-hook 'c++-mode-hook `ac-settings-4-cpp)
 (setq cpp-system-src-regex "\\(Microsoft Visual Studio.+\\|/boost/.+\\|/ace/.+\\)")
 ;(setq-mode-local c++-mode whitespace-style '(lines-tail))
@@ -511,6 +514,7 @@
 ;;  '(column-marker-1 ((t (:box (:line-width 1 :color "red"))))))
 
 (require 'tramp)
+(set-default 'tramp-default-proxies-alist '(("10.0.2.140" "ambition" "/ssh:%h:")))
 ;; (setq tramp-default-method "scp")
 ;; (setq recentf-auto-cleanup 'never)
 ;(setq tramp-default-method "plink"
@@ -1135,6 +1139,13 @@ If there is no .svn directory, examine if there is CVS and run
  /usr/include/x86_64-linux-gnu
  /usr/include"
                )))
+
+(require 'go-autocomplete)
+(require 'go-mode)
+
+(add-hook 'go-mode-hook
+      '(lambda()
+         (program-mode-common-hook)))
 
 ;; Local Variables:
 ;; coding: utf-8
