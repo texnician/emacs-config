@@ -20,17 +20,19 @@
 (server-start)
 
 (set-language-environment "UTF-8")
-(set-frame-font "Menlo-13")
-                                        ;(set-frame-font "Consolas-10")
-                                        ;(set-fontset-font "fontset-default" 'han (font-spec :family "WenQuanYi Micro Hei Mono"))
-                                        ;(set-frame-font "Consolas-12")
-                                        ;(set-fontset-font "fontset-default" 'han (font-spec :family "Microsoft YaHei"))
+(set-frame-font "Menlo-14")
+(set-fontset-font "fontset-default" 'han (font-spec :family "PingFang_SC"))
+(set-fontset-font "fontset-default" 'oriya (font-spec :family "Oriya MN"))
+;; (set-frame-font "Consolas-12")
+;; (set-fontset-font "fontset-default" 'han (font-spec :family "Microsoft YaHei"))
 ;; (set-fontset-font "fontset-default" '(#x0B01 . #x0B70) (font-spec :family "Kalinga"))
 ;; (set-fontset-font "fontset-default" '(#x2200 . #x22FF) (font-spec :family "Arial Unicode MS"))
 ;; (set-fontset-font "fontset-default" '(#x2150 . #x218F) (font-spec :family "Arial Unicode MS"))
 ;; (set-fontset-font "fontset-default" '(#x2700 . #x27FF) (font-spec :family "Code2000"))
 ;; (set-fontset-font "fontset-default" '(#xFF00 . #xFFEF) (font-spec :family "MingLiU"))
 ;; (set-fontset-font "fontset-default" '(#x1000 . #x109F) (font-spec :family "Code2000"))
+
+(when window-system (set-frame-size (selected-frame) 145 45))
 
 (setq backup-directory-alist nil)
 (setq backup-directory-alist
@@ -135,11 +137,14 @@
 ;;; Move this code earlier if you want to reference
 ;;; packages in your .emacs.
 (require 'package)
+(setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
+                         ("marmalade" . "https://marmalade-repo.org/packages/")
+                         ))
 (add-to-list 'package-archives
-             ;;	     '("marmalade" . "http://marmalade-repo.org/packages/")
+             ;'("melpa" . "http://melpa.milkbox.net/packages/") t
              '("melpa" . "http://melpa.org/packages/") t)
-(add-to-list 'package-archives
-             '("marmalade" . "http://marmalade-repo.org/packages/"))
+;; (add-to-list 'package-archives
+;;              '("marmalade" . "http://marmalade-repo.org/packages/"))
 (package-initialize)
 
 ;; (dolist (dir (directory-files package-user-dir t "[a-zA-Z].*[0-9]$"))
@@ -223,7 +228,7 @@
 
 (defun select-random-theme ()
   (let ((rand-pos (random (length *favorite-themes*))))
-    (labels ((next-theme (po lst)
+    (cl-labels ((next-theme (po lst)
                          (if (eql po rand-pos)
                              (and (functionp (car lst)) (funcall (car lst)))
                            (next-theme (1+ po) (cdr lst)))))
@@ -233,8 +238,159 @@
                                         ;(color-theme-taylor)
                                         ;(color-theme-classic)
                                         ; (color-theme-zenburn)
-(color-theme-solarized-dark)
-                                        ;(color-theme-solarized-light)
+;(color-theme-solarized-dark)
+;(color-theme-solarized-light)
+
+;;; helm
+(require 'helm)
+(require 'helm-config)
+; The default "C-x c" is quite close to "C-x C-c", which quits Emacs.
+;; Changed to "C-c h". Note: We must set "C-c h" globally, because we
+;; cannot change `helm-command-prefix-key' once `helm-config' is loaded.
+(global-set-key (kbd "C-c h") 'helm-command-prefix)
+(global-unset-key (kbd "C-x c"))
+
+(define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
+(define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
+(define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+
+(when (executable-find "curl")
+  (setq helm-google-suggest-use-curl-p t))
+
+(setq helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
+      helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
+      helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
+      helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
+      helm-ff-file-name-history-use-recentf t)
+(helm-mode 1)
+
+;;; yasnippet
+;;; (add-to-list 'load-path "~/github/yasnippet")
+(require 'yasnippet)
+(yas-global-mode 1)
+;;;(add-hook 'c-mode-common-hook #'yas-minor-mode)
+(defun shk-yas/helm-prompt (prompt choices &optional display-fn)
+  "Use helm to select a snippet. Put this into `yas-prompt-functions.'"
+  (interactive)
+  (setq display-fn (or display-fn 'identity))
+  (if (require 'helm-config)
+      (let (tmpsource cands result rmap)
+        (setq cands (mapcar (lambda (x) (funcall display-fn x)) choices))
+        (setq rmap (mapcar (lambda (x) (cons (funcall display-fn x) x)) choices))
+        (setq tmpsource
+              (list
+               (cons 'name prompt)
+               (cons 'candidates cands)
+               '(action . (("Expand" . (lambda (selection) selection))))
+               ))
+        (setq result (helm-other-buffer '(tmpsource) "*helm-select-yasnippet"))
+        (if (null result)
+            (signal 'quit "user quit!")
+          (cdr (assoc result rmap))))
+    nil))
+(add-to-list 'yas-prompt-functions 'shk-yas/helm-prompt)
+
+(defun yas/make-cc-header-guard-list (fname &optional omitted-dir)
+  "Make cc-mode header guard candidate list, `fname' is full file name.
+filter out dirs in `omitted-dir'."
+  (let* ((dirs (split-string (file-name-directory fname) "/" t))
+         (base (file-name-base fname))
+         (ext (file-name-extension fname))
+         (parts (remove-if '(lambda (str)
+                              (if (stringp str)
+                                  (cond ((string= (substring str -1) ":") t) 
+                                        ((member str omitted-dir) t)
+                                        (t nil))
+                                nil)) (append dirs (list (concat base "_" ext))))))
+    (let (cands last)
+      (dolist (elt (reverse parts))
+        (setq last (cons elt last))
+        (setq cands (cons last cands)))
+      (setq cands (reverse cands))
+      (mapcar '(lambda (lst)
+                 (mapconcat 'upcase lst "_")) cands))))
+
+(defun my-c-initialization-hook ()
+  (define-key c-mode-base-map "\C-m" 'c-context-line-break))
+(add-hook 'c-initialization-hook 'my-c-initialization-hook)
+
+;; offset customizations not in my-c-style
+;; This will take precedence over any setting of the syntactic symbol
+;; made by a style.
+(setq c-offsets-alist '((member-init-intro . +)))
+
+;; Create my personal style.
+(defconst my-c-style
+  '((c-basic-offset . 4)
+    (c-tab-always-indent        . t)
+    (c-comment-only-line-offset . 4)
+    (c-hanging-braces-alist     . ((brace-list-open)
+                                   (brace-entry-open)
+                                   (statement-cont)
+                                   (substatement-open after)
+                                   (block-close . c-snug-do-while)
+                                   (extern-lang-open after)
+                                   (namespace-open after)
+                                   (module-open after)
+                                   (composition-open after)
+                                   (inexpr-class-open after)
+
+                                   (inexpr-class-close before)
+                                   (arglist-cont-nonempty)))
+    (c-hanging-colons-alist     . ((member-init-intro before)
+                                   (inher-intro)
+                                   (case-label after)
+                                   (label after)
+                                   (access-label after)))
+    (c-cleanup-list             . (scope-operator
+                                   empty-defun-braces
+                                   defun-close-semi
+                                   list-close-comma
+                                   one-liner-defun
+                                   compact-empty-funcall
+                                   comment-close-slash))
+    (c-offsets-alist            . ((inexpr-class . +)
+                                   (inexpr-statement . +)
+                                   (lambda-intro-cont . +)
+                                   (inlambda . c-lineup-inexpr-block)
+                                   (template-args-cont c-lineup-template-args +)
+                                   (incomposition . +)
+                                   (inmodule . +)
+                                   (innamespace . 0)
+                                   (inextern-lang . +)
+                                   (cpp-define-intro c-lineup-cpp-define +)
+                                   (cpp-macro-cont . +)
+                                   (cpp-macro .
+                                              [0])
+                                   (inclass . +)
+                                   (stream-op . c-lineup-streamop)
+                                   (arglist-cont-nonempty c-lineup-gcc-asm-reg c-lineup-arglist)
+                                   (arglist-cont c-lineup-gcc-asm-reg 0)
+                                   (comment-intro . 0)
+                                   (access-label . -)
+                                   (case-label . *)
+                                   (substatement . +)
+                                   (statement-case-intro . +)
+                                   (inher-cont . c-lineup-multi-inher)
+                                   (inher-intro . +)
+                                   (member-init-cont . c-lineup-multi-inher)
+                                   (member-init-intro . +)
+                                   (func-decl-cont . +)
+                                   (defun-block-intro . +)
+                                   (c . c-lineup-C-comments)
+                                   (string . c-lineup-dont-change)
+                                   (topmost-intro-cont . c-lineup-topmost-intro-cont)
+                                   (inline-open . +)
+                                   (arglist-close . +)
+                                   (arglist-intro . +)
+                                   (statement-cont . +)
+                                   (knr-argdecl-intro . +)
+                                   (substatement-open . 0)
+                                   (statement-block-intro . +)))
+
+    (c-echo-syntactic-information-p . t))
+  "My C Programming Style")
+(c-add-style "tyg" my-c-style)
 
 (defun c-delete-tail-blank ()
   "Delete extra blankets at the end of file"
@@ -253,7 +409,7 @@
 ;; C mode
 (add-hook 'c-mode-hook
           '(lambda ()
-             (c-set-style "gnu")
+             (c-set-style "tyg")
              (c-toggle-auto-state)
              (c-toggle-hungry-state)
              (setq semanticdb-project-system-databases
@@ -268,14 +424,11 @@
                      scope-operator comment-close-slash))
              (make-local-variable 'before-save-hook)
              (add-to-list 'before-save-hook 'c-delete-tail-blank)
-             (setq ac-sources (append '(ac-source-abbrev ac-source-words-in-same-mode-buffers ac-source-clang-async ac-source-imenu ac-source-filename ac-source-dictionary )
-                                      ac-sources)
-                   )
-             (define-key c-mode-map [(meta ?/)] 'ac-complete-clang-async)))
+             (setq ac-sources (append '(ac-source-abbrev ac-source-words-in-same-mode-buffers  ac-source-imenu ac-source-filename ac-source-dictionary) ac-sources))))
 
 (add-hook 'c++-mode-hook
           '(lambda ()
-             (c-set-style "stroustrup")
+             (c-set-style "tyg")
              (c-toggle-auto-state)
              (c-toggle-hungry-state)
              (setq semanticdb-project-system-databases
@@ -290,10 +443,7 @@
                      scope-operator comment-close-slash))
              (make-local-variable 'before-save-hook)
              (add-to-list 'before-save-hook 'c-delete-tail-blank)
-             (setq ac-sources (append '(ac-source-abbrev ac-source-words-in-same-mode-buffers ac-source-clang-async ac-source-imenu ac-source-filename ac-source-dictionary )
-                                      ac-sources))
-             (define-key c++-mode-map [(meta ?/)] 'ac-complete-clang-async)
-             (set-local-clang-flags)))
+             (setq ac-sources (append '(ac-source-abbrev ac-source-words-in-same-mode-buffers ac-source-imenu ac-source-filename ac-source-dictionary ) ac-sources))))
 
 (load "desktop")
 (desktop-load-default)
@@ -307,11 +457,25 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(ac-modes (quote (emacs-lisp-mode lisp-interaction-mode c-mode cc-mode c++-mode clojure-mode java-mode perl-mode cperl-mode python-mode ruby-mode ecmascript-mode javascript-mode js2-mode php-mode css-mode makefile-mode sh-mode fortran-mode f90-mode ada-mode xml-mode sgml-mode slime-mode slime-repl-mode lisp-mode jde-mode)))
- '(c-cleanup-list (quote (empty-defun-braces one-liner-defun defun-close-semi list-close-comma scope-operator comment-close-slash)))
- '(c-macro-cppflags "-std=c++0x -I/usr/local/include/guile/2.0 -I/usr/include/c++/4.4.4 -I/usr/include/c++/4.4.4/x86_64-slackware-linux -I/usr/local/stow/stackless-271-export/include/python2.7/")
+ '(ac-modes
+   (quote
+    (emacs-lisp-mode lisp-interaction-mode c-mode cc-mode c++-mode clojure-mode java-mode perl-mode cperl-mode python-mode ruby-mode ecmascript-mode javascript-mode js2-mode php-mode css-mode makefile-mode sh-mode fortran-mode f90-mode ada-mode xml-mode sgml-mode slime-mode slime-repl-mode lisp-mode jde-mode)))
+ '(ansi-color-faces-vector
+   [default bold shadow italic underline bold bold-italic bold])
+ '(ansi-color-names-vector
+   (vector "#cccccc" "#f2777a" "#99cc99" "#ffcc66" "#6699cc" "#cc99cc" "#66cccc" "#2d2d2d"))
+ '(c-cleanup-list
+   (quote
+    (empty-defun-braces one-liner-defun defun-close-semi list-close-comma scope-operator comment-close-slash)))
+ '(c-macro-cppflags
+   "-std=c++0x -I/usr/local/include/guile/2.0 -I/usr/include/c++/4.4.4 -I/usr/include/c++/4.4.4/x86_64-slackware-linux -I/usr/local/stow/stackless-271-export/include/python2.7/")
+ '(custom-enabled-themes (quote (sanityinc-solarized-light)))
+ '(custom-safe-themes
+   (quote
+    ("4aee8551b53a43a883cb0b7f3255d6859d766b6c5e14bcb01bed572fcbef4328" "628278136f88aa1a151bb2d6c8a86bf2b7631fbea5f0f76cba2a0079cd910f7d" "1b8d67b43ff1723960eb5e0cba512a2c7a2ad544ddb2533a90101fd1852b426e" "06f0b439b62164c6f8f84fdda32b62fb50b6d00e8b01c2208e55543a6337433a" "bb08c73af94ee74453c90422485b29e5643b73b05e8de029a6909af6a3fb3f58" "82d2cac368ccdec2fcc7573f24c3f79654b78bf133096f9b40c20d97ec1d8016" "4cf3221feff536e2b3385209e9b9dc4c2e0818a69a1cdb4b522756bcdf4e00a4" default)))
  '(doc-view-ghostscript-program (executable-find "gswin32c"))
  '(ecb-options-version "2.32")
+ '(fci-rule-color "#515151")
  '(global-semantic-decoration-mode t nil (semantic-decorate-mode))
  '(global-semantic-highlight-edits-mode nil nil (semantic-util-modes))
  '(global-semantic-highlight-func-mode t nil (semantic-util-modes))
@@ -324,17 +488,43 @@
  '(global-semantic-show-unmatched-syntax-mode nil nil (semantic-util-modes))
  '(global-semantic-stickyfunc-mode t nil (semantic-util-modes))
  '(global-senator-minor-mode t nil (senator))
- '(jde-global-classpath (quote ("/home/tyg/android-sdk-linux_x86/platforms/android-8" "")))
+ '(jde-global-classpath
+   (quote
+    ("/home/tyg/android-sdk-linux_x86/platforms/android-8" "")))
  '(jde-jdk-registry (quote (("1.6.0" . "/usr/local/stow/jdk1.6.0_26"))))
  '(jde-lib-directory-names (quote ("/android.*$" "/lib$" "/jar$")))
+ '(ns-alternate-modifier (quote super))
+ '(ns-command-modifier (quote meta))
  '(password-cache-expiry nil)
- '(semantic-c-dependency-system-include-path (quote ("E:\\project\\share\\include" "E:\\project\\boost_1_38_0\\boost_1_38_0" "D:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\include")))
+ '(semantic-c-dependency-system-include-path
+   (quote
+    ("E:\\project\\share\\include" "E:\\project\\boost_1_38_0\\boost_1_38_0" "D:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\include")))
  '(semantic-inhibit-functions (quote (test-inhibt)))
  '(semanticdb-global-mode t nil (semanticdb))
  '(slime-net-coding-system (quote utf-8-unix))
- '(which-function-mode t)
- '(ns-alternate-modifier (quote super))
- '(ns-command-modifier (quote meta)))
+ '(vc-annotate-background nil)
+ '(vc-annotate-color-map
+   (quote
+    ((20 . "#f2777a")
+     (40 . "#f99157")
+     (60 . "#ffcc66")
+     (80 . "#99cc99")
+     (100 . "#66cccc")
+     (120 . "#6699cc")
+     (140 . "#cc99cc")
+     (160 . "#f2777a")
+     (180 . "#f99157")
+     (200 . "#ffcc66")
+     (220 . "#99cc99")
+     (240 . "#66cccc")
+     (260 . "#6699cc")
+     (280 . "#cc99cc")
+     (300 . "#f2777a")
+     (320 . "#f99157")
+     (340 . "#ffcc66")
+     (360 . "#99cc99"))))
+ '(vc-annotate-very-old-color nil)
+ '(which-function-mode t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -346,14 +536,20 @@
  '(variable-pitch ((t (:inverse-video nil :height 1.2 :family "Droid Serif")))))
 
 (require 'tramp)
-(setq tramp-default-method "plink")
+(setq tramp-default-method "ssh")
+(setq password-cache-expiry 30)
+;(setq password-cache nil)
 (setq recentf-auto-cleanup 'never)
+(setq tramp-ssh-controlmaster-options "-o ControlPath=%%C -o ControlMaster=auto -o ControlPersist=no")
+(load-file (expand-file-name "~/.emacs.d/proxy_host_config.el"))
 
 ;;(setq auto-complete-dir "~/auto-complete-1.3.1")
 ;;(add-to-list 'load-path auto-complete-dir)
 (require 'auto-complete-config)
 ;;(add-to-list 'ac-dictionary-directories (concatenate 'string auto-complete-dir "/ac-dict"))
 (ac-config-default)
+(ac-set-trigger-key "TAB")
+(ac-set-trigger-key "<tab>")
 
 
 (defun ido-goto-symbol (&optional symbol-list)
@@ -579,8 +775,7 @@
              (linum-mode t)
              (highlight-parentheses-mode t)
              (paredit-mode t)))
-(require 'auto-complete-auctex)
-
+;(require 'auto-complete-auctex)
 
 (defun my-ac-config ()
   (add-hook 'c-mode-common-hook 'ac-cc-mode-setup)
@@ -593,6 +788,17 @@
           '(lambda ()
              (make-local-variable 'before-save-hook)
              (add-to-list 'before-save-hook 'c-delete-tail-blank)))
+
+;; (require 'ac-clang)
+;; (setq ac-clang--server-executable "/usr/local/bin/clang-server-x86_64")
+;; (when (ac-clang-initialize)
+;;   (add-hook 'c-mode-common-hook '(lambda ()
+;;                                    (setq ac-sources '(ac-source-clang-async))
+;;                                    ;(setq ac-clang-cflags CFLAGS)
+;;                                    (ac-clang-activate-after-modify))))
+;; (setq ac-clang-debug-log-buffer-p t)
+
+;(setq ac-clang-async-autocompletion-automatically-p nil)
 
 ;(require 'auto-complete-clang)
 

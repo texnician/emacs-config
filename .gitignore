@@ -10,3 +10,4 @@
 *.lai
 *.la
 *.a
+snippets/cc-mode/*doc

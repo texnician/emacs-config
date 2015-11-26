@@ -1,0 +1,11 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: bdhdr
+# key: bdhdr
+# binding: direct-keybinding
+# --
+#ifndef ${1:$$(yas-choose-value (yas/make-cc-header-guard-list (buffer-file-name) '("include" "src")))}
+#define $1
+`yas/selected-text`$0
+#endif // $1
+
+
