@@ -6,6 +6,8 @@
 (transient-mark-mode t)
 (tool-bar-mode 0)
 (scroll-bar-mode 0)
+(setq visible-bell t)
+(subword-mode t)
                                         ;(menu-bar-mode 0)
 (global-auto-revert-mode t)
 (auto-revert-mode t)
@@ -293,7 +295,8 @@
 (defun yas/make-cc-header-guard-list (fname &optional omitted-dir)
   "Make cc-mode header guard candidate list, `fname' is full file name.
 filter out dirs in `omitted-dir'."
-  (let* ((dirs (split-string (file-name-directory fname) "/" t))
+  (let* ((dirs (mapcar '(lambda (str) (replace-regexp-in-string "-" "_" str))
+                       (split-string (file-name-directory fname) "/" t)))
          (base (file-name-base fname))
          (ext (file-name-extension fname))
          (parts (remove-if '(lambda (str)
@@ -368,7 +371,7 @@ filter out dirs in `omitted-dir'."
                                    (arglist-cont c-lineup-gcc-asm-reg 0)
                                    (comment-intro . 0)
                                    (access-label . -)
-                                   (case-label . *)
+                                   (case-label . +)
                                    (substatement . +)
                                    (statement-case-intro . +)
                                    (inher-cont . c-lineup-multi-inher)
