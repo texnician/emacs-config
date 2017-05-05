@@ -113,22 +113,23 @@
 
 ;; CEDET
 
-(load-file "~/cedet-1.1/common/cedet.el")
-(semantic-load-enable-excessive-code-helpers)
-(setq-mode-local c-mode
-                 semanticdb-find-default-throttle
-                 '(project unloaded system recursive omniscience))
-(setq semanticdb-default-save-directory "~/semanticdb")
+;; (load-file "~/cedet-1.1/common/cedet.el")
+;(semantic-load-enable-excessive-code-helpers)
+;; (setq-mode-local c-mode
+;;                  semanticdb-find-default-throttle
+;;                  '(project unloaded system recursive omniscience))
+;; (setq semanticdb-default-save-directory "~/semanticdb")
 
 (defun test-inhibt ()
   (string-match-p "xxxx" (buffer-file-name)))
 
 (defun my-semantic-init ()
-  (semantic-stickyfunc-mode t)
-  (semantic-decoration-mode t)
-  (semantic-mru-bookmark-mode nil)
-  (semantic-highlight-edits-mode t)
-  (semantic-show-parser-state-mode t))
+  ;(semantic-stickyfunc-mode t)
+  ;(semantic-decoration-mode t)
+  ;(semantic-mru-bookmark-mode nil)
+  ;(semantic-highlight-edits-mode t)
+  ;(semantic-show-parser-state-mode t))
+)
 
 ;; (remove-hook 'senator-minor-mode-hook 'senator-hippie-expand-hook)
 (add-hook 'senator-minor-mode-hook
@@ -290,12 +291,12 @@
             (signal 'quit "user quit!")
           (cdr (assoc result rmap))))
     nil))
-(add-to-list 'yas-prompt-functions 'shk-yas/helm-prompt)
+; (add-to-list 'yas-prompt-functions 'shk-yas/helm-prompt)
 
 (defun yas/make-cc-header-guard-list (fname &optional omitted-dir)
   "Make cc-mode header guard candidate list, `fname' is full file name.
 filter out dirs in `omitted-dir'."
-  (let* ((dirs (mapcar '(lambda (str) (replace-regexp-in-string "-" "_" str))
+  (let* ((dirs (mapcar #'(lambda (str) (replace-regexp-in-string "-" "_" str))
                        (split-string (file-name-directory fname) "/" t)))
          (base (file-name-base fname))
          (ext (file-name-extension fname))
@@ -310,7 +311,7 @@ filter out dirs in `omitted-dir'."
         (setq last (cons elt last))
         (setq cands (cons last cands)))
       (setq cands (reverse cands))
-      (mapcar '(lambda (lst)
+      (mapcar #'(lambda (lst)
                  (mapconcat 'upcase lst "_")) cands))))
 
 (defun my-c-initialization-hook ()
@@ -415,10 +416,10 @@ filter out dirs in `omitted-dir'."
              (c-set-style "tyg")
              (c-toggle-auto-state)
              (c-toggle-hungry-state)
-             (setq semanticdb-project-system-databases
-                   (list (semanticdb-create-database
-                          semanticdb-new-database-class
-                          "/usr/include/")))
+             ;; (setq semanticdb-project-system-databases
+             ;;       (list (semanticdb-create-database
+             ;;              semanticdb-new-database-class
+             ;;              "/usr/include/")))
              (define-key c-mode-base-map [backtab] 'indent-relative)
              (setq c-cleanup-list 
                    '(empty-defun-braces
@@ -434,10 +435,10 @@ filter out dirs in `omitted-dir'."
              (c-set-style "tyg")
              (c-toggle-auto-state)
              (c-toggle-hungry-state)
-             (setq semanticdb-project-system-databases
-                   (list (semanticdb-create-database
-                          semanticdb-new-database-class
-                          "/usr/include/")))
+             ;; (setq semanticdb-project-system-databases
+             ;;       (list (semanticdb-create-database
+             ;;              semanticdb-new-database-class
+             ;;              "/usr/include/")))
              (define-key c-mode-base-map [backtab] 'indent-relative)
              (setq c-cleanup-list 
                    '(empty-defun-braces
@@ -446,7 +447,8 @@ filter out dirs in `omitted-dir'."
                      scope-operator comment-close-slash))
              (make-local-variable 'before-save-hook)
              (add-to-list 'before-save-hook 'c-delete-tail-blank)
-             (setq ac-sources (append '(ac-source-abbrev ac-source-words-in-same-mode-buffers ac-source-imenu ac-source-filename ac-source-dictionary ) ac-sources))))
+             (setq ac-sources (append '(ac-source-abbrev ac-source-words-in-same-mode-buffers ac-source-imenu ac-source-filename ac-source-dictionary ) ac-sources))
+             (electric-pair-mode t)))
 
 (load "desktop")
 (desktop-load-default)
@@ -479,18 +481,6 @@ filter out dirs in `omitted-dir'."
  '(doc-view-ghostscript-program (executable-find "gswin32c"))
  '(ecb-options-version "2.32")
  '(fci-rule-color "#515151")
- '(global-semantic-decoration-mode t nil (semantic-decorate-mode))
- '(global-semantic-highlight-edits-mode nil nil (semantic-util-modes))
- '(global-semantic-highlight-func-mode t nil (semantic-util-modes))
- '(global-semantic-idle-completions-mode nil nil (semantic-idle))
- '(global-semantic-idle-scheduler-mode t nil (semantic-idle))
- '(global-semantic-idle-summary-mode t nil (semantic-idle))
- '(global-semantic-idle-tag-highlight-mode t nil (semantic-idle))
- '(global-semantic-mru-bookmark-mode t nil (semantic-util-modes))
- '(global-semantic-show-parser-state-mode nil nil (semantic-util-modes))
- '(global-semantic-show-unmatched-syntax-mode nil nil (semantic-util-modes))
- '(global-semantic-stickyfunc-mode t nil (semantic-util-modes))
- '(global-senator-minor-mode t nil (senator))
  '(jde-global-classpath
    (quote
     ("/home/tyg/android-sdk-linux_x86/platforms/android-8" "")))
@@ -498,12 +488,14 @@ filter out dirs in `omitted-dir'."
  '(jde-lib-directory-names (quote ("/android.*$" "/lib$" "/jar$")))
  '(ns-alternate-modifier (quote super))
  '(ns-command-modifier (quote meta))
+ '(package-selected-packages
+   (quote
+    (yasnippet thrift textmate-to-yas quack protobuf-mode pig-mode paredit-everywhere math-symbol-lists lua-mode latex-preview-pane java-snippets highlight-stages highlight-quoted highlight-parentheses helm-unicode helm-themes helm-projectile helm-package helm-make helm-ls-svn helm-ls-git helm-google helm-gitignore helm-git-grep helm-git-files helm-git helm-c-yasnippet helm-c-moccur helm-ack geiser find-file-in-repository find-file-in-project emoji-display common-lisp-snippets color-theme-zenburn color-theme-x color-theme-wombat color-theme-vim-insert-mode color-theme-twilight color-theme-tangotango color-theme-tango color-theme-solarized color-theme-sanityinc-tomorrow color-theme-sanityinc-solarized color-theme-railscasts color-theme-monokai color-theme-molokai color-theme-library color-theme-ir-black color-theme-heroku color-theme-gruber-darker color-theme-github color-theme-emacs-revert-theme color-theme-eclipse color-theme-dpaste color-theme-dg color-theme-complexity color-theme-cobalt color-theme-buffer-local color-theme-actress clojure-snippets clojure-mode-extra-font-locking auctex-latexmk ac-slime ac-helm)))
  '(password-cache-expiry nil)
  '(semantic-c-dependency-system-include-path
    (quote
     ("E:\\project\\share\\include" "E:\\project\\boost_1_38_0\\boost_1_38_0" "D:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\include")))
  '(semantic-inhibit-functions (quote (test-inhibt)))
- '(semanticdb-global-mode t nil (semanticdb))
  '(slime-net-coding-system (quote utf-8-unix))
  '(vc-annotate-background nil)
  '(vc-annotate-color-map
@@ -543,7 +535,7 @@ filter out dirs in `omitted-dir'."
 (setq password-cache-expiry 30)
 ;(setq password-cache nil)
 (setq recentf-auto-cleanup 'never)
-(setq tramp-ssh-controlmaster-options "-o ControlPath=%%C -o ControlMaster=auto -o ControlPersist=no")
+(setq tramp-ssh-controlmaster-options "-o ControlPath=~/.ssh/master-%%r@%%h:%%p -o ControlMaster=auto -o ControlPersist=yes")
 (load-file (expand-file-name "~/.emacs.d/proxy_host_config.el"))
 
 ;;(setq auto-complete-dir "~/auto-complete-1.3.1")

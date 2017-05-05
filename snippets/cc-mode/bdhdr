@@ -7,5 +7,3 @@
 #define $1
 `yas/selected-text`$0
 #endif // $1
-
-
